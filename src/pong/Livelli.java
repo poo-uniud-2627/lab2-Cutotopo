@@ -8,6 +8,15 @@ package pong;
  * Si vince un livello vincendo una partita; perdendo una partita si perde una vita.
  */
 public class Livelli {
+    private int currentLevel;
+    private int maxLevel;
+
+    private int currentLives;
+    private int maxLives;
+
+    private Lato human;
+    private boolean isFinished;
+
     /**
      * Un gioco nuovo.
      * Pretende: niente.
@@ -15,41 +24,56 @@ public class Livelli {
      * Lancia IllegalArgumentException se numeroLivelli o vite è minore di 1, o se umano è null.
      */
     public Livelli(int numeroLivelli, int vite, Lato umano) {
-        throw new UnsupportedOperationException("da scrivere");
+        if (numeroLivelli < 1) {
+            throw new IllegalArgumentException("numeroLivelli must be greater than zero");
+        }
+        if (vite < 1) {
+            throw new IllegalArgumentException("vite must be greater than zero");
+        }
+        if (umano == null) {
+            throw new IllegalArgumentException("umano must not be null");
+        }
+
+        this.maxLevel = numeroLivelli;
+        this.maxLives = vite;
+        this.human = umano;
+
+        this.ricomincia();
     }
 
     /** Il livello a cui si gioca, fra 1 e getNumeroLivelli(). */
     public int getLivello() {
-        throw new UnsupportedOperationException("da scrivere");
+        return this.currentLevel;
     }
 
+    /** Quanti livelli ha il gioco. */
     public int getNumeroLivelli() {
-        throw new UnsupportedOperationException("da scrivere");
+        return this.maxLevel;
     }
 
     /** Le vite che restano, fra 0 e quelle iniziali. */
     public int getVite() {
-        throw new UnsupportedOperationException("da scrivere");
+        return this.currentLives;
     }
 
     /** Il lato su cui gioca la persona (l'altro è il giocatore automatico). */
     public Lato getUmano() {
-        throw new UnsupportedOperationException("da scrivere");
+        return this.human;
     }
 
     /** Vero se è stato vinto l'ultimo livello. */
     public boolean isCompletato() {
-        throw new UnsupportedOperationException("da scrivere");
+        return this.isFinished && this.currentLives != 0;
     }
 
     /** Vero se le vite sono finite. */
     public boolean isPerso() {
-        throw new UnsupportedOperationException("da scrivere");
+        return this.currentLives == 0;
     }
 
     /** Vero se il gioco è completato o perso. */
     public boolean isFinito() {
-        throw new UnsupportedOperationException("da scrivere");
+        return this.isFinished;
     }
 
     /**
@@ -63,7 +87,25 @@ public class Livelli {
      * Lancia IllegalArgumentException se vincitore è null, e non cambia niente.
      */
     public void partitaFinita(Lato vincitore) {
-        throw new UnsupportedOperationException("da scrivere");
+        if (vincitore == null) {
+            throw new IllegalArgumentException("vincitore must not be null");
+        }
+
+        if (!this.isFinished) {
+            if (vincitore == this.human) {
+                if (this.currentLevel < this.maxLevel) {
+                    this.currentLevel++;
+                } else {
+                    this.isFinished = true;
+                }
+            } else {
+                this.currentLives--;
+
+                if (this.currentLives == 0) {
+                    this.isFinished = true;
+                }
+            }
+        }
     }
 
     /**
@@ -72,7 +114,9 @@ public class Livelli {
      * Promette: livello 1, con tutte le vite; il gioco non è completato né perso.
      */
     public void ricomincia() {
-        throw new UnsupportedOperationException("da scrivere");
+        this.currentLevel = 1;
+        this.currentLives = this.maxLives;
+        this.isFinished = false;
     }
 
     /**
@@ -82,6 +126,9 @@ public class Livelli {
      *           ma mai più delle vite iniziali: con tutte le vite, non cambia niente. Il livello non cambia.
      */
     public void guadagnaVita() {
-        throw new UnsupportedOperationException("da scrivere");
+        if (!this.isFinito() && this.currentLives < this.maxLives) {
+            this.currentLives++;
+        }
+
     }
 }

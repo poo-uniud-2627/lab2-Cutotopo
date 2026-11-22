@@ -3,10 +3,14 @@ package pong;
 
 import giocatori.GiocatoreAutomatico;
 import java.util.Random;
+
+import geometria.Rettangolo;
 import ostacoli.Livello;
 import ostacoli.MotoreDeiLivelli;
 import ostacoli.Ostacoli;
 import ostacoli.Ostacolo;
+import stelle.Raccolta;
+import stelle.Stella;
 
 /**
  * Una partita a un livello: voi a sinistra, il giocatore automatico a destra, due racchette,
@@ -16,6 +20,7 @@ class Partita {
     /** Si gioca a 5, con almeno due punti di scarto (5 a 4 non basta, 6 a 4 sì). */
     static final int PUNTI_PER_VINCERE = 5;
     static final int SCARTO_MINIMO = 2;
+    static final int TICKS_SPAWN_STELLA = 500;
 
     private final Campo campo;
     private final Giocatore giocatoreSinistra;
@@ -27,6 +32,11 @@ class Partita {
     private Livello livello;
     private Ostacoli ostacoli;
     private boolean iniziata;
+    private Livelli livelli = new Livelli(MotoreDeiLivelli.NUMERO_LIVELLI, 3, Lato.SINISTRA);
+    private Raccolta raccolta = new Raccolta(Raccolta.STELLE_PER_UNA_VITA);
+    
+    private Stella stella;
+    private int stellaSpawnTimeout;
 
     /** Una partita fra umano, a sinistra, e il giocatore automatico, a destra; si comincia dal livello 1. */
     Partita(Campo campo, Giocatore umano) {
@@ -36,7 +46,7 @@ class Partita {
         this.racchettaSinistra = new Racchetta(30, centroY);
         this.racchettaDestra = new Racchetta(campo.getLarghezza() - 30 - Racchetta.LARGHEZZA, centroY);
         this.palla = new Palla(campo.getLarghezza() / 2.0, campo.getAltezza() / 2.0);
-        preparaLivello(1);
+        preparaLivello(this.livelli.getLivello());
     }
 
     /**
@@ -70,13 +80,18 @@ class Partita {
     Livello getLivello() { return livello; }
     Ostacoli getOstacoli() { return ostacoli; }
 
+    Stella getStella() { return this.stella; }
+
     /**
      * Fa cominciare la partita e lancia la palla. Se una partita era già stata giocata, prima
      * prepara di nuovo lo stesso livello (ostacoli nuovi, punti a zero).
      * Pretende: la partita non è in corso.
      */
     void avvia() {
-        if (iniziata) preparaLivello(livello.numero());
+        if (livelli.isFinito()) {
+            livelli.ricomincia();
+        }
+        if (iniziata) preparaLivello(this.livelli.getLivello());
         iniziata = true;
         lanciaPalla(new Random().nextBoolean());
     }
@@ -89,6 +104,32 @@ class Partita {
     /** Un passo del gioco: viene chiamato 60 volte al secondo. */
     void aggiorna() {
         if (!isInCorso()) return;
+
+        this.stellaSpawnTimeout++;
+
+        if (this.stellaSpawnTimeout > TICKS_SPAWN_STELLA && (this.stella == null || !this.stella.isVisibile())) {
+            this.stellaSpawnTimeout = 0;
+            this.stella = new Stella(
+                new Rettangolo(this.racchettaSinistra.getX(), new Random().nextInt(0, this.campo.getAltezza()), 16, 16),
+                TICKS_SPAWN_STELLA * 3
+            );
+        }
+
+        if (this.stella != null) {
+            this.stella.avanza();
+
+            Rettangolo areaRacchetta = new Rettangolo(
+                racchettaSinistra.getX(), racchettaSinistra.getY(),
+                racchettaSinistra.getLarghezza(), racchettaSinistra.getAltezza()
+            );
+            if (stella.isVisibile() && stella.getArea().tocca(areaRacchetta)) {
+                stella.raccogli();
+                if (raccolta.aggiungi()) {
+                    livelli.guadagnaVita();
+                }
+            }
+        }
+
         ostacoli.avanzaTutti();
         muoviRacchette();
         palla.muovi();
@@ -143,6 +184,7 @@ class Partita {
     private void dopoIlPunto(boolean versoSinistra) {
         if (punteggio.isFinita()) {
             palla.fermaIn(campo.getLarghezza() / 2.0, campo.getAltezza() / 2.0);
+            this.livelli.partitaFinita(this.punteggio.getVincitore());
         } else {
             lanciaPalla(!versoSinistra);
         }

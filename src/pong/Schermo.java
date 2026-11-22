@@ -16,6 +16,7 @@ import javax.swing.JPanel;
 import javax.swing.Timer;
 import ostacoli.MotoreDeiLivelli;
 import ostacoli.Ostacolo;
+import stelle.Stella;
 
 /**
  * Mostra la partita: sessanta volte al secondo la fa avanzare di un passo e la ridisegna.
@@ -51,12 +52,12 @@ class Schermo extends JPanel {
 
     private void passo() {
         if (!partita.isInCorso()) {
-            for (int numero = 1; numero <= MotoreDeiLivelli.NUMERO_LIVELLI; numero++) {
-                // il tasto del numero, sopra le lettere o nel tastierino numerico
-                if (tastiera.premuto(KeyEvent.VK_0 + numero) || tastiera.premuto(KeyEvent.VK_NUMPAD0 + numero)) {
-                    partita.preparaLivello(numero);
-                }
-            }
+            // for (int numero = 1; numero <= MotoreDeiLivelli.NUMERO_LIVELLI; numero++) {
+            //     // il tasto del numero, sopra le lettere o nel tastierino numerico
+            //     if (tastiera.premuto(KeyEvent.VK_0 + numero) || tastiera.premuto(KeyEvent.VK_NUMPAD0 + numero)) {
+            //         partita.preparaLivello(numero);
+            //     }
+            // }
             if (tastiera.premuto(KeyEvent.VK_SPACE)) partita.avvia();
         }
         partita.aggiorna();
@@ -93,6 +94,12 @@ class Schermo extends JPanel {
             }
         }
 
+        Stella stella = partita.getStella();
+        if (stella != null && stella.isVisibile()) {
+            g2.setColor(Color.YELLOW);
+            riempi(g2, stella.getArea()); // or draw a star shape
+        }
+
         g2.setColor(Color.WHITE);
         disegna(g2, partita.getRacchettaSinistra());
         disegna(g2, partita.getRacchettaDestra());
@@ -115,7 +122,7 @@ class Schermo extends JPanel {
             } else if (partita.getVincitore() == Lato.DESTRA) {
                 scriviAlCentro(g2, "Ha vinto il computer.", larghezza, altezza / 2 - 40);
             }
-            scriviAlCentro(g2, "Premi un tasto da 1 a 5 per scegliere il livello, poi SPAZIO", larghezza, altezza / 2 + 60);
+            // scriviAlCentro(g2, "Premi un tasto da 1 a 5 per scegliere il livello, poi SPAZIO", larghezza, altezza / 2 + 60);
         }
     }
 
